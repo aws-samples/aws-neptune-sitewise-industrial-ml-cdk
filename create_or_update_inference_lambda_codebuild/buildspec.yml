@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - curl 'https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip' -o 'awscliv2.zip'
+      - unzip awscliv2.zip
+      - ./aws/install
+      - /usr/local/bin/aws --version
+      - echo Logging in to Amazon ECR...
+      - /usr/local/bin/aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+  build:
+    commands:
+      - MANIFEST=$(aws ecr batch-get-image --repository-name ${IMAGE_REPO_NAME} --image-ids imageTag=${SITE_ID}-approve-ready --output json | jq --raw-output --join-output '.images[0].imageManifest')
+      - /usr/local/bin/aws ecr put-image --repository-name ${IMAGE_REPO_NAME} --image-tag ${SITE_ID}-approved --image-manifest "$MANIFEST"
+      - |
+        if /usr/local/bin/aws lambda get-function --function-name ${SITE_ID}-inference-lambda > /dev/null 2>&1; then /usr/local/bin/aws lambda update-function-code --function-name ${SITE_ID}-inference-lambda --image-uri ${INFERENCE_IMAGE_URI}:${SITE_ID}-approved
+        else /usr/local/bin/aws lambda create-function --function-name ${SITE_ID}-inference-lambda --package-type Image --code ImageUri=${INFERENCE_IMAGE_URI}:${SITE_ID}-approved --role ${INFERENCE_LAMBDA_EXECUTION_ROLE_ARN} --memory-size 10240 --timeout 900 --environment "Variables={bucket=${INFERENCE_RESULTS_ARTIFACTS_BUCKET}, timestream_db_name=testdb, timestream_table_name=test_eo}"
+        fi
