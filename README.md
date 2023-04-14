@@ -5,8 +5,29 @@ This repository provides a sample Amazon Cloud Development Kit (CDK) application
 The application is broken up into two parts - a training pipeline and an inference pipeline. The training pipeline collects data from Amazon Neptune and AWS IoT SiteWise, starts an AWS Batch job to train the model, and deploys the model as an AWS Lambda function. The inference pipeline collects inference data from Amazon Neptune and AWS IoT SiteWise and invokes the inference AWS Lambda function. 
 
 Below, you can see the architecture diagram of the solution. 
-<architecture.png>
+![ARCHITECTURE](architecture.png)
 
+# How to use it?
+
+Follow the below steps to setup and test the application in your own AWS account. To do so, you'll need AWS Console and AWS CLI access to your AWS account with the necessary permissions. 
+
+### Initial Setup
+
+Setup the AWS CLI:
+```
+$ aws configure
+```
+
+Setup a python virtualenv within the dependencies required to deploy the applications.
+```
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+```
+
+### Amazon CDK Application Deployment
+
+Deploy both CDK applications to your AWS account. You 
 
 # Deployment Steps
 

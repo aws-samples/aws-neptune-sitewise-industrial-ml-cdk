@@ -31,7 +31,6 @@ neptune_vpc_id = Fn.import_value("neptunevpcid")
 neptune_private_subnet_id_1 = Fn.import_value("neptunevpcprivatesubnet1id")
 neptune_private_subnet_id_2 = Fn.import_value("neptunevpcprivatesubnet2id")
 neptune_cluster_writer_endpoint = Fn.import_value("neptunewriterclusterendpointname")
-# neptune_private_subnet_id_3 = Fn.importValue('neptune_vpc_private_subnet_3_id')
 
 
 class RetrainStack(cdk.Stack):
