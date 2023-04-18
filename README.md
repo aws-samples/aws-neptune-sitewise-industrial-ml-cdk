@@ -132,12 +132,70 @@ Once complete, your Data streams should look like this:
 
 ### Amazon Neptune Setup
 
-Amazon Neptune offers Jupyter Notebooks - a fully managed interactive development environment for Neptune. We will use a Neptune Notebook to load Neptune with the Asset information from Sitewise. 
+Amazon Neptune offers Jupyter Notebooks - a fully managed interactive development environment for Neptune. We will use a Neptune Notebook to load Neptune with the Asset information from Sitewise. If you are new to Neptune notebooks, I'd suggest taking a look at the documentation [here](https://docs.aws.amazon.com/neptune/latest/userguide/graph-notebooks.html). 
 
+1. Create an Amazon Neptune Notebook. Give it a name, and select 'Create new IAM role'.
 
+![image-9.png](./image-9.png)
 
+2. Attach the following policy to the IAM role created when the Neptune Notebook was developed.
 
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "s3:GetObject",
+                "s3:GetBucketLocation",
+                "s3:PutObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::model-data-bucket-199131085527",
+                "arn:aws:s3:::model-data-bucket-199131085527/*"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}
+```
 
+3. Add the *neptune-load-from-s3-<accountid>* IAM Role to the Neptune cluster.
+
+In the Neptune console, select the Neptune cluster, and select 'Manage IAM roles'.
+![image-14.png](./image-14.png)
+
+Add the role to the cluster, and wait until it is finished. 
+![image-15.png](./image-15.png)
+
+4. Create an S3 Endpoint:
+
+Follow the instructions for Creating the [Amazon S3 VPC Endpoint](https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-IAM.html) in the Neptune documentation. 
+
+5. Edit the site_data.csv file included in this repo. You'll need to add the SiteWise Asset IDs and SiteWise Point Property IDs for each RTU. 
+
+Asset ID:
+![image-10.png](./image-10.png)
+
+Point Property ID:
+![image-11.png](./image-11.png)
+
+Once completed, the csv should look like this:
+![image-12.png](./image-12.png)
+
+Upload the site_data.csv to the model-data-bucket-<accountid> S3 bucket. 
+
+5. Upload the LoadData.ipynb file from this repo to the Neptune Notebook. Edit the three variables defined in the first cell. 
+
+The first is the account ID. 
+
+The second is the neptune cluster writer node URL. This can be found on the neptune console here:
+![image-13.png](./image-13.png)
+
+The third is the region this application is deployed in. 
+
+6. Run all cells in the Jupyter Notebook. 
 
 
 
