@@ -13,6 +13,12 @@ Follow the below steps to setup and test the application in your own AWS account
 
 ### Initial Setup
 
+Clone this repository:
+
+```
+$ git clone <repository-url>
+```
+
 Setup the AWS CLI:
 ```
 $ aws configure
@@ -106,16 +112,16 @@ First, replace the four 12-digit AWS account IDs in bulk-import-job-config.json 
 
 Next, run the following AWS CLI command. 
 ```
-aws iotsitewise create-bulk-import-job --cli-input-json file://bulk-import-job-config.json
+$ aws iotsitewise create-bulk-import-job --cli-input-json file://bulk-import-job-config.json
 ```
 
 You can run the following AWS CLI command to check on the status of the bulk import job:
 ```
-aws iotsitewise create-bulk-import-job
+$ aws iotsitewise create-bulk-import-job
 ```
 Don't proceed with the next step until the bulk import job succeeds.
 
-7. Associate the 
+7. Associate the newly created Data streams with the RTU Assets. Select a Data stream, Select Manage data streams, and choose the corresponding Measurement. Do so for all 16 Data streams. 
 
 
 
