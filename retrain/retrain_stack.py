@@ -59,6 +59,17 @@ class RetrainStack(cdk.Stack):
             versioned=True,
         )
 
+        # upload sample sitewise data to s3
+        s3deploy.BucketDeployment(
+            self,
+            "data-upload-1",
+            sources=[
+                s3deploy.Source.asset("data"),
+            ],
+            destination_key_prefix = "data",
+            destination_bucket=data_bucket,
+        )
+
         # role to load data into sitewise using bulkload job api from s3
         sitewise_data_bucket_policy = aws_iam.PolicyStatement(
             actions=["s3:GetObject", "s3:GetBucketLocation", "s3:PutObject"],

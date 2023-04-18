@@ -1,0 +1,25 @@
+{
+    "errorReportLocation": {
+        "bucket": "model-data-bucket-199131085527",
+        "prefix": "error"
+    },
+    "files": [
+        {
+            "bucket": "model-data-bucket-199131085527",
+            "key": "data/site01_gbl.csv"
+        },
+        {
+            "bucket": "model-data-bucket-199131085527",
+            "key": "data/site01_zone.csv"
+        }
+    ],
+    "jobConfiguration": {
+        "fileFormat": {
+            "csv": {
+                "columnNames": ["ALIAS","DATA_TYPE","TIMESTAMP_SECONDS","TIMESTAMP_NANO_OFFSET","QUALITY","VALUE"]
+            }
+        }
+    },
+    "jobName": "upload-to-sitewise-job-2",
+    "jobRoleArn": "arn:aws:iam::199131085527:role/sitewise-s3-role-199131085527"
+}
