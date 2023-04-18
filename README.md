@@ -85,7 +85,7 @@ To construct the AWS IoT SiteWise environment, follow the below steps in the AWS
 ![image-1.png](./image-1.png)
 ![image-2.png](./image-2.png)
 
-3. Create AWS IoT SiteWise Assets. Create a SITE_01 Asset, of the Site model. Also create 4 RTUs, named RTU_001, RTU_002, RTU_003, and RTU_004. 
+3. Create AWS IoT SiteWise Assets. Create a SITE_01 Asset, of the Site model. Also create 3 RTUs, named RTU_001, RTU_002, and RTU_003: 
 
 ![image-3.png](./image-3.png)
 ![image-4.png](./image-4.png)
@@ -108,7 +108,7 @@ Create a retention period of 30 days.
 
 6. Load the RTU data into SiteWise. Now that we have modeled the Sites and Assets in SiteWise, we need to load the telemetry data that the ML models will be trained on. When the CDK stack was deployed, sample data was uploaded to the model-data S3 bucket. We will now use the AWS CLI to upload the data from S3 to AWS IoT SiteWise.
 
-First, replace the four 12-digit AWS account IDs in bulk-import-job-config.json file with your account ID. 
+**First, replace the four 12-digit AWS account IDs in bulk-import-job-config.json file with *your* account ID.**
 
 Next, run the following AWS CLI command. 
 ```
@@ -117,11 +117,54 @@ $ aws iotsitewise create-bulk-import-job --cli-input-json file://bulk-import-job
 
 You can run the following AWS CLI command to check on the status of the bulk import job:
 ```
-$ aws iotsitewise create-bulk-import-job
+$ aws iotsitewise list-bulk-import-jobs
 ```
-Don't proceed with the next step until the bulk import job succeeds.
 
-7. Associate the newly created Data streams with the RTU Assets. Select a Data stream, Select Manage data streams, and choose the corresponding Measurement. Do so for all 16 Data streams. 
+**Don't proceed with the next step until the bulk import job succeeds.**
+
+7. Associate the newly created Data streams with the RTU Assets. Select a Data stream, Select Manage data streams, and choose the Measurement corresponding to the Site, RTU, and brick sensor name. Do so for all 12 Data streams. 
+
+![image-7.png](./image-7.png)
+
+Once complete, your Data streams should look like this: 
+
+![image-8.png](./image-8.png)
+
+### Amazon Neptune Setup
+
+Amazon Neptune offers Jupyter Notebooks - a fully managed interactive development environment for Neptune. We will use a Neptune Notebook to load Neptune with the Asset information from Sitewise. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
