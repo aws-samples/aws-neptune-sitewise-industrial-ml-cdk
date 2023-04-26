@@ -1,0 +1,13 @@
+SITE_ID,RTU_NAME,SW_ASSET_ID,ASSET_TYPE,POINT_NAME,SW_POINT_PROPERTY_ID
+SITE_01,RTU_001,,RTU,brick:Outside_Air_Humidity_Sensor,
+SITE_01,RTU_001,,RTU,brick:Outside_Air_Temperature_Sensor,
+SITE_01,RTU_001,,RTU,brick:Zone_Air_Humidity_Sensor,
+SITE_01,RTU_001,,RTU,brick:Zone_Air_Temperature_Sensor,
+SITE_01,RTU_002,,RTU,brick:Outside_Air_Humidity_Sensor,
+SITE_01,RTU_002,,RTU,brick:Outside_Air_Temperature_Sensor,
+SITE_01,RTU_002,,RTU,brick:Zone_Air_Humidity_Sensor,
+SITE_01,RTU_002,,RTU,brick:Zone_Air_Temperature_Sensor,
+SITE_01,RTU_003,,RTU,brick:Outside_Air_Humidity_Sensor,
+SITE_01,RTU_003,,RTU,brick:Outside_Air_Temperature_Sensor,
+SITE_01,RTU_003,,RTU,brick:Zone_Air_Humidity_Sensor,
+SITE_01,RTU_003,,RTU,brick:Zone_Air_Temperature_Sensor,

@@ -195,7 +195,28 @@ The second is the neptune cluster writer node URL. This can be found on the nept
 
 The third is the region this application is deployed in. 
 
-6. Run all cells in the Jupyter Notebook. 
+6. Run all cells in the Jupyter Notebook. You may need to create a VPC endpoint. If so, follow [these steps](https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-data.html#bulk-load-prereqs-s3). 
+
+You should end up with a response similar to the following:
+![image-18.png](./image-18.png)
+
+Once all cells are run in the Notebook, you are ready to test the application!
+
+### Train the Model
+
+To train the model, you'll want to trigger the AWS Step Functions retrain-pipeline. 
+
+1. In the AWS Management Console, find the retrain-pipeline State machine.
+![image-16.png](./image-16.png)
+
+2. Click 'Start Execution' to manually trigger the state machine. Replace the input with the following JSON data. The Name of the execution and "id" should be the same. We recommend using the auto-generated Name as the "id". See below:
+![image-17.png](./image-17.png)
+
+The retrain-pipeline has completed successfully when all steps of the pipeline succeeded and are marked as green.
+
+### Run inference on the Model
+
+Once the model is trained, we can begin using it to perform inference. 
 
 
 

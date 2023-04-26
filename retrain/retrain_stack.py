@@ -198,7 +198,7 @@ class RetrainStack(cdk.Stack):
             runtime=aws_lambda.Runtime.PYTHON_3_9,
             index="site_id_and_rtu_lambda.py",
             handler="handler",
-            timeout=cdk.Duration.minutes(5),
+            timeout=cdk.Duration.minutes(15),
             vpc=neptune_vpc,
             security_groups=[lambda_security_group],
             environment={
@@ -343,8 +343,7 @@ class RetrainStack(cdk.Stack):
 
         compute_environment = batch.CfnComputeEnvironment(
             self,
-            "retrain-batch-compute-environment-0",
-            compute_environment_name="retrain-batch-compute-environment-0",
+            "retrain-batch-compute-environment",
             type="MANAGED",
             compute_resources=batch.CfnComputeEnvironment.ComputeResourcesProperty(
                 subnets=retrain_vpc.select_subnets(
