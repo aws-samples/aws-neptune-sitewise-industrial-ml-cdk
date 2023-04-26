@@ -76,7 +76,7 @@ def getTimeInterval(pipeline_type):
     if pipeline_type == "inference":
         start_time = int((end_time + datetime.timedelta(hours=-1)).timestamp())
     if pipeline_type == "retrain":
-        start_time = int((end_time + datetime.timedelta(days=-10)).timestamp())
+        start_time = int((end_time + datetime.timedelta(days=-1)).timestamp())
     return end_time, start_time
 
 
@@ -100,6 +100,7 @@ def getHistoricalDatawithinTimeInterval(assetProperties, start_time, end_time):
             "timeOrdering": "ASCENDING",
         }
         response = sitewise_client.batch_get_asset_property_value_history(entries=[ap])
+        print(response)
 
         # the response is paginated. the below logic helps the function work with the paginated response
         if "nextToken" in response:
