@@ -193,7 +193,7 @@ def handler(event, context):
     logger.info(f'Starting to get data from SiteWise')
     data = getHistoricalDatawithinTimeInterval(site_asset_data, start_time, end_time)
     dataframe = pd.DataFrame.from_records(data)
-    logger.info(f'Data from Neptune: {dataframe.head()}')
+    logger.info(f'Data from SiteWise: {dataframe.head()}')
 
     logger.info(f'Writing data to S3')
     s3Writer(event_id, dataframe, data_bucket, pipeline_type, site_id)
