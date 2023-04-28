@@ -89,7 +89,7 @@ class RetrainStack(cdk.Stack):
         sitewise_s3_role.add_to_policy(sitewise_data_bucket_policy)
 
         # role to allow
-        neptune_read_from_s3_role = aws_iam.Role(
+        aws_iam.Role(
             self,
             "neptune-read-from-s3",
             assumed_by=aws_iam.CompositePrincipal(
@@ -104,9 +104,7 @@ class RetrainStack(cdk.Stack):
         )
 
         # defined Neptune vpc for lambda querying Neptune results
-        neptune_vpc = ec2.Vpc.from_vpc_attributes(
-            self,
-            "neptune_vpc",
+        neptune_vpc = ec2.Vpc.from_vpc_attributes(self, "neptune_vpc",
             vpc_id=neptune_vpc_id,
             availability_zones=cdk.Fn.get_azs(),
             private_subnet_ids=[
@@ -114,6 +112,33 @@ class RetrainStack(cdk.Stack):
                 neptune_private_subnet_id_2,
             ],
         )
+
+        # creating security group
+        lambda_security_group = ec2.SecurityGroup(
+            self,
+            "LambdaToNeptuneSg",
+            description="lambda security group",
+            vpc=neptune_vpc,
+        )
+
+        # # creating IoT SiteWise endpoints for the VPC
+        # neptune_vpc.add_interface_endpoint(
+        #     id = "sitewise-vpc-endpoint-api",
+        #     service = ec2.InterfaceVpcEndpointService("com.amazonaws.us-east-1.iotsitewise.api"),
+        #     security_groups=[lambda_security_group],
+        #     subnets= ec2.SubnetSelection(
+        #         subnet_type = ec2.SubnetType.PRIVATE_WITH_EGRESS
+        #     )
+        # )
+
+        # neptune_vpc.add_interface_endpoint(
+        #     id = "sitewise-vpc-endpoint-data",
+        #     service = ec2.InterfaceVpcEndpointService("com.amazonaws.us-east-1.iotsitewise.data"),
+        #     security_groups=[lambda_security_group],
+        #     subnets= ec2.SubnetSelection(
+        #         subnet_type = ec2.SubnetType.PRIVATE_WITH_EGRESS
+        #     )
+        # )
 
         # IAM policies so multiple lambdas and batch role can access prod data processed bucket and Athena
         # bucket is encrypted in another account so need kms access
@@ -181,14 +206,6 @@ class RetrainStack(cdk.Stack):
             timeout=cdk.Duration.minutes(15),
         )
 
-        # creating security group
-        lambda_security_group = ec2.SecurityGroup(
-            self,
-            "LambdaToNeptuneSg",
-            description="lambda security group",
-            vpc=neptune_vpc,
-        )
-
         # helper lambda to get site ids and rtus
         site_id_and_rtu_lambda = aws_alambda.PythonFunction(
             self,
@@ -239,6 +256,11 @@ class RetrainStack(cdk.Stack):
         # adding ingress rule to neptune sg
         neptune_security_group.add_ingress_rule(
             peer=lambda_security_group, connection=ec2.Port.tcp(8182)
+        )
+
+        # adding ingress rule to lambda sg
+        lambda_security_group.add_ingress_rule(
+            peer=lambda_security_group, connection=ec2.Port.all_tcp()
         )
 
         data_bucket.grant_read_write(site_id_lambda)
