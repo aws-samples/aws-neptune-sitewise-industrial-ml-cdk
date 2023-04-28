@@ -18,7 +18,9 @@ class NeptuneNotebookStack(Stack):
         super().__init__(scope, construct_id, **kwargs)
 
         # Create a VPC
-        neptune_vpc = ec2.Vpc(self, "Neptune-CDK-VPC")
+        neptune_vpc = ec2.Vpc(self, "Neptune-CDK-VPC",
+            ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16")                      
+        )
 
         # Cluster Parameters
         cluster_params = neptune.ClusterParameterGroup(self, "Neptune-CDK-ClusterParams",

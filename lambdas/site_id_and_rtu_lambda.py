@@ -8,6 +8,7 @@ import numpy as np
 import logging
 from SPARQLWrapper import SPARQLWrapper2
 import datetime
+from io import StringIO
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -69,23 +70,13 @@ def getRTUsandPointForAs(site_id):
     return results
 
 
-# def getTimeInterval (pipeline_type):
-#    # USE THIS FUNCTION WE MOVE THIS TO CONDUIT
-#    end_time = int(datetime.datetime.utcnow().timestamp())
-#    if pipeline_type == "inference":
-#        start_time = int((datetime.datetime.utcnow() + datetime.timedelta(hours=-1)).timestamp())
-#    if pipeline_type == "retrain":
-#        start_time = int((datetime.datetime.utcnow() + datetime.timedelta(days=-90)).timestamp())
-#    return end_time, start_time
-
-
 def getTimeInterval(pipeline_type):
     # REMOVE THIS FUNCTION AND UNCOMMENT OUT THE VERSION ABOVE ONCE WE MOVE TO CONDUIT
     end_time = datetime.datetime.fromtimestamp(1652732267)
     if pipeline_type == "inference":
         start_time = int((end_time + datetime.timedelta(hours=-1)).timestamp())
     if pipeline_type == "retrain":
-        start_time = int((end_time + datetime.timedelta(days=-90)).timestamp())
+        start_time = int((end_time + datetime.timedelta(days=-1)).timestamp())
     return end_time, start_time
 
 
@@ -171,17 +162,20 @@ def getHistoricalDatawithinTimeInterval(assetProperties, start_time, end_time):
 
 def s3Writer(event_id, data_frame, s3_bucket_name, pipeline_type, site_id):
     path = (
-        "s3://"
-        + s3_bucket_name
-        + "/"
-        + pipeline_type
+        # "s3://"
+        # + s3_bucket_name
+        # + "/"
+        pipeline_type
         + "/"
         + event_id
         + "/"
         + site_id
         + ".csv"
     )
-    data_frame.to_csv(path_or_buf=path, index=False)
+    csv_buffer = StringIO()
+    data_frame.to_csv(csv_buffer)
+    s3_resource = boto3.resource('s3')
+    s3_resource.Object(s3_bucket_name, path).put(Body=csv_buffer.getvalue())
 
 
 def handler(event, context):
@@ -191,13 +185,18 @@ def handler(event, context):
     site_id = event["site_id"]
     pipeline_type = event["pipeline_type"]
     event_id = event["event_id"]
-
+    
+    logger.info(f'Starting to get data from Neptune')
     site_asset_data = getRTUsandPointForAs(site_id)
+    logger.info(f'Data from Neptune: {site_asset_data[0]}')
     end_time, start_time = getTimeInterval(pipeline_type)
+    logger.info(f'Starting to get data from SiteWise')
     data = getHistoricalDatawithinTimeInterval(site_asset_data, start_time, end_time)
-
     dataframe = pd.DataFrame.from_records(data)
+    logger.info(f'Data from SiteWise: {dataframe.head()}')
 
+    logger.info(f'Writing data to S3')
     s3Writer(event_id, dataframe, data_bucket, pipeline_type, site_id)
+    logger.info(f'Data written to S3')
 
     return {"site_id": site_id, "pipeline_type": pipeline_type, "event_id": event_id}

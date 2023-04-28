@@ -120,6 +120,24 @@ You can run the following AWS CLI command to check on the status of the bulk imp
 $ aws iotsitewise list-bulk-import-jobs
 ```
 
+7. Lastly, you'll need to create an [Amazon VPC Interface Endpoint](https://docs.aws.amazon.com/iot-sitewise/latest/userguide/vpc-interface-endpoints.html) for AWS IoT SiteWise. 
+
+On the VPC console, navigate to Endpoints, and select Create Endpoint.
+
+For service name, select com.amazonaws.us-east-1.iotsitewise.api
+For VPC, select the NeptuneNotebookStack VPC.
+Select all available subnets.
+For Security Groups, select the RetrainStack-LambdaToNeptuneSg. 
+Leave the rest of the options as defaulted. 
+
+![image-19.png](./image-19.png)
+
+Create a second VPC Endpoint, but this time select com.amazonaws.us-east-1.iotsitewise.data as the service name. Use the same parameters from the previously created endpoint.
+
+You should see both endpoints once completed:
+
+![image-20.png](./image-20.png)
+
 **Don't proceed with the next step until the bulk import job succeeds.**
 
 7. Associate the newly created Data streams with the RTU Assets. Select a Data stream, Select Manage data streams, and choose the Measurement corresponding to the Site, RTU, and brick sensor name. Do so for all 12 Data streams. 
@@ -195,12 +213,59 @@ The second is the neptune cluster writer node URL. This can be found on the nept
 
 The third is the region this application is deployed in. 
 
-6. Run all cells in the Jupyter Notebook. 
+6. Run all cells in the Jupyter Notebook. You may need to create a VPC endpoint. If so, follow [these steps](https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-data.html#bulk-load-prereqs-s3). 
+
+You should end up with a response similar to the following:
+![image-18.png](./image-18.png)
+
+Once all cells are run in the Notebook, you are ready to test the application!
+
+### Train the Model
+
+To train the model, you'll want to trigger the AWS Step Functions retrain-pipeline. 
+
+1. In the AWS Management Console, find the retrain-pipeline State machine.
+![image-16.png](./image-16.png)
+
+2. Click 'Start Execution' to manually trigger the state machine. Replace the input with the following JSON data.
+```
+{
+  "id": "3f3b617e-ec79-4794-b821-d37394b7fa72",
+  "resources": [
+    "retrainrule"
+  ]
+}
+```
+
+ The Name of the execution and "id" should be the same. We recommend using the auto-generated Name as the "id". See below:
+![image-22.png](./image-22.png)
+
+The retrain-pipeline has completed successfully when all steps of the pipeline succeeded and are marked as green.
+![image-21.png](./image-21.png)
 
 
+### Run inference on the Model
+
+Once the model is trained, we can begin using it to perform inference. 
+
+1. In the AWS Management Console, find the inference-pipeline State machine.
+
+2. Click 'Start Execution' to manually trigger the state machine. Replace the input with the following JSON data. 
+```
+{
+  "id": "3f3b617e-ec79-4794-b821-d37394b7fa72",
+  "resources": [
+    "inferrule"
+  ]
+}
+```
+
+The Name of the execution and "id" should be the same. We recommend using the auto-generated Name as the "id". See below:
+![image-17.png](./image-17.png)
 
 
-
+Once completed successfully, you can view the outputs of the model at the following S3 location:
+model-data-bucket-<accountid>/inference/<inference-pipeline-event-id>/site_01.csv
 
 
 
