@@ -43,6 +43,10 @@ class RetrainStack(cdk.Stack):
             "batch-job-model-artifact-bucket",
             bucket_name="model-artifacts-bucket-" + cdk.Aws.ACCOUNT_ID,
             versioned=True,
+            server_access_logs_prefix="logs_",
+            block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
+            encryption=aws_s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
         )
         # bucket to hold inference artifacts during inferencing process
         inference_results_bucket = aws_s3.Bucket(
@@ -50,6 +54,10 @@ class RetrainStack(cdk.Stack):
             "inference-model-results-bucket",
             bucket_name="model-inf-results-artifacts-bucket-" + cdk.Aws.ACCOUNT_ID,
             versioned=True,
+            server_access_logs_prefix="logs_",
+            block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
+            encryption=aws_s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
         )
         # bucket to hold inference/retrain data for inference/retraining process
         data_bucket = aws_s3.Bucket(
@@ -57,6 +65,10 @@ class RetrainStack(cdk.Stack):
             "data-bucket",
             bucket_name="model-data-bucket-" + cdk.Aws.ACCOUNT_ID,
             versioned=True,
+            server_access_logs_prefix="logs_",
+            block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
+            encryption=aws_s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
         )
 
         # upload sample sitewise data to s3
@@ -185,7 +197,7 @@ class RetrainStack(cdk.Stack):
             "init-function",
             function_name="init-function",
             entry="./lambdas",
-            runtime=aws_lambda.Runtime.PYTHON_3_8,
+            runtime=aws_lambda.Runtime.PYTHON_3_9,
             index="init_lambda.py",
             handler="handler",
             timeout=cdk.Duration.minutes(15),
@@ -193,6 +205,7 @@ class RetrainStack(cdk.Stack):
                 "bucket": inference_results_bucket.bucket_name,
                 "data_bucket": data_bucket.bucket_name,
             },
+            reserved_concurrent_executions=30,
         )
 
         codebuild_lambda = aws_alambda.PythonFunction(
@@ -200,10 +213,11 @@ class RetrainStack(cdk.Stack):
             "codebuild-function",
             function_name="codebuild-function",
             entry="./lambdas",
-            runtime=aws_lambda.Runtime.PYTHON_3_8,
+            runtime=aws_lambda.Runtime.PYTHON_3_9,
             index="codebuild_lambda.py",
             handler="handler",
             timeout=cdk.Duration.minutes(15),
+            reserved_concurrent_executions=30,
         )
 
         # helper lambda to get site ids and rtus
@@ -224,6 +238,7 @@ class RetrainStack(cdk.Stack):
                 "neptune_cluster_writer_endpoint": neptune_cluster_writer_endpoint,
             },
             memory_size=1024,
+            reserved_concurrent_executions=30,
         )
 
         # orchestrating lambda to return site ids and start site_id_and_rtu_lambda
@@ -243,6 +258,7 @@ class RetrainStack(cdk.Stack):
                 "neptune_cluster_writer_endpoint": neptune_cluster_writer_endpoint,
                 "site_id_and_rtu_lambda": site_id_and_rtu_lambda.function_arn,
             },
+            reserved_concurrent_executions=30,
         )
         site_id_lambda.node.add_dependency(site_id_and_rtu_lambda)
 
@@ -443,6 +459,10 @@ class RetrainStack(cdk.Stack):
             "codebuild-bucket",
             bucket_name="retrain-codebuild-artifacts-bucket-" + cdk.Aws.ACCOUNT_ID,
             versioned=True,
+            server_access_logs_prefix="logs_",
+            block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
+            encryption=aws_s3.BucketEncryption.S3_MANAGED,
+            enforce_ssl=True,
         )
 
         inference_image_codebuild_bucket_deployment = s3deploy.BucketDeployment(
