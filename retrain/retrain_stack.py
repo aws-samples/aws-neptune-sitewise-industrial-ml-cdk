@@ -154,7 +154,7 @@ class RetrainStack(cdk.Stack):
 
         # IAM policies so multiple lambdas and batch role can access prod data processed bucket and Athena
         # bucket is encrypted in another account so need kms access
-        kms_statement = aws_iam.PolicyStatement(actions=["kms:*"], resources=["*"])
+        kms_statement = aws_iam.PolicyStatement(actions=["kms:decrypt"], resources=["*"])
 
         # add permissions for IotSitewise
         sitewise_statement = aws_iam.PolicyStatement(
@@ -174,7 +174,7 @@ class RetrainStack(cdk.Stack):
         )
 
         codebuild_statement = aws_iam.PolicyStatement(
-            actions=["codebuild:StartBuild", "codebuild:BatchGet*"], resources=["*"]
+            actions=["codebuild:StartBuild", "codebuild:BatchGetBuilds"], resources=["*"]
         )
 
         vpc_statement = aws_iam.PolicyStatement(
@@ -299,7 +299,7 @@ class RetrainStack(cdk.Stack):
 
         # deploy retrain EC2 in public subnet so it has internet access and to save cost on NAT Gateway. The subnet sg allows no inbound traffic for security.
         retrain_subnet_configuration = ec2.SubnetConfiguration(
-            name="retrain_subnet", subnet_type=ec2.SubnetType.PUBLIC, cidr_mask=26
+            name="retrain_subnet", subnet_type=ec2.SubnetType.PUBLIC, cidr_mask=26, map_public_ip_on_launch=False,
         )
 
         retrain_vpc = ec2.Vpc(
@@ -560,7 +560,7 @@ class RetrainStack(cdk.Stack):
                             "lambda:CreateFunction",
                             "lambda:UpdateFunctionCode",
                         ],
-                        resources=["*"],
+                        resources=[f"arn:aws:lambda:{cdk.Aws.REGION}:{cdk.Aws.ACCOUNT_ID}:function:*"],
                     ),
                     aws_iam.PolicyStatement(
                         actions=["iam:GetRole", "iam:PassRole"],
@@ -575,7 +575,7 @@ class RetrainStack(cdk.Stack):
                 "inference-lambda-update-ecr-access-policy",
                 statements=[
                     aws_iam.PolicyStatement(
-                        actions=["ecr:*"],
+                        actions=["ecr:BatchGetImage", "ecr:SetRepositoryPolicy", "ecr:GetRepositoryPolicy", "ecr:PutImage"],
                         resources=[retrained_inference_ecr.repository_arn],
                     ),
                     aws_iam.PolicyStatement(
