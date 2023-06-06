@@ -4,6 +4,7 @@ import boto3
 import numpy as np
 import pandas as pd
 import logging
+import tempfile
 
 aws_s3 = boto3.client("s3")
 
@@ -62,12 +63,21 @@ def handler(lambda_event, context):
 
     data_df["is_anomaly"] = is_anomaly
     out_file_name = f"{site_id}_{rtu}_{pointname}.csv"
-    data_df.to_csv(f"/tmp/{out_file_name}")
-
-    # Save output in s3
-    bucket_name = os.environ["bucket"]
-    key = f"{event_id}/{out_file_name}"
+    
+    # create temp directory
+    tmpdir = tempfile.mkdtemp()
     try:
-        upload_to_s3(bucket_name, key, f"/tmp/{out_file_name}")
+        path = f"{tmpdir}/{out_file_name}"
+        data_df.to_csv(path)
+
+        # Save output in s3
+        bucket_name = os.environ["bucket"]
+        key = f"{event_id}/{out_file_name}"
+
+        upload_to_s3(bucket_name, key, path)
     except Exception as err:
         print(err)
+    finally:
+        os.remove(path)
+        os.rmdir(tmpdir)
+        
