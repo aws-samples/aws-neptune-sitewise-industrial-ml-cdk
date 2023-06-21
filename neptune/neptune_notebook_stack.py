@@ -7,7 +7,8 @@ from aws_cdk import (
     aws_iam as iam, 
     aws_sagemaker as sagemaker,
     RemovalPolicy,
-    CfnOutput
+    CfnOutput,
+    aws_kms as kms
 )
 import aws_cdk.aws_neptune_alpha as neptune
 from constructs import Construct
@@ -64,6 +65,7 @@ class NeptuneNotebookStack(Stack):
         Create a Notebook Instance attached to the Neptune Cluster
         """
         # Create an IAM policy for the Notebook
+        # Allows notebook role to get objects and list buckets with the name aws-neptune-notebook/*
         notebook_role_policy_doc = iam.PolicyDocument()
         notebook_role_policy_doc.add_statements(iam.PolicyStatement(**{
             "effect": iam.Effect.ALLOW,
@@ -123,6 +125,11 @@ EOF
         CfnOutput(self, "neptunevpcprivatesubnet2id", value=neptune_vpc.private_subnets[1].subnet_id, export_name="neptunevpcprivatesubnet2id")
         CfnOutput(self, "neptunewriterclusterendpointname", value = neptune_cluster.cluster_endpoint.hostname, export_name="neptunewriterclusterendpointname")
         #CfnOutput(self, "neptune_vpc_private_subnet_3_id", value=neptune_vpc.private_subnets[2].subnet_id)
+
+        # creating a KMS key to encrypt the notebook
+        encruption_key_id = "kms-key-neptune-notebook"
+        encryption_key = kms.Key(self, encruption_key_id,
+        )
         
         notebook = sagemaker.CfnNotebookInstance(self, 'CDKNeptuneWorkbench',
             instance_type='ml.t3.medium',
@@ -132,7 +139,8 @@ EOF
             root_access='Disabled',
             security_group_ids=[neptune_security_group_id],
             subnet_id=neptune_subnet_id,
-            direct_internet_access='Enabled',
+            kms_key_id= encruption_key_id,
+            direct_internet_access='Disabled',
         )
         Tags.of(notebook).add('aws-neptune-cluster-id', neptune_cluster.cluster_identifier)
         Tags.of(notebook).add('aws-neptune-resource-id', neptune_cluster.cluster_resource_identifier)
