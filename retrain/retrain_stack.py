@@ -522,7 +522,7 @@ class RetrainStack(cdk.Stack):
         codebuild_artifacts_bucket.grant_read(inference_image_build_project.role)
         retrained_inference_ecr.grant_pull_push(inference_image_build_project.role)
 
-        encryption_key = kms.Key(self, "codebuild-encryption",
+        encryption_key = kms.Key(self, "codebuild-encryption", enable_key_rotation=True
         )
 
         # codebuild step to create/update inference lambda using ECR image
