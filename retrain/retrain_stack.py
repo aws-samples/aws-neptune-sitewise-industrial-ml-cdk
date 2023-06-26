@@ -22,6 +22,7 @@ from aws_cdk import (
     Duration,
     aws_lambda_python_alpha as aws_alambda,
     Fn,
+    aws_kms as kms
 )
 
 # WHEN RUNNING THIS STACK FOR THE FIRST TIME - MUST RUN NEPTUNE STACK FIRST AS THE BELOW ARE DEPENDENT ON NEPTUNE STACK
@@ -521,6 +522,9 @@ class RetrainStack(cdk.Stack):
         codebuild_artifacts_bucket.grant_read(inference_image_build_project.role)
         retrained_inference_ecr.grant_pull_push(inference_image_build_project.role)
 
+        encryption_key = kms.Key(self, "codebuild-encryption",
+        )
+
         # codebuild step to create/update inference lambda using ECR image
         create_or_update_inference_lambda_project = codebuild.Project(
             self,
@@ -546,8 +550,12 @@ class RetrainStack(cdk.Stack):
                 ),
                 "INFERENCE_RESULTS_ARTIFACTS_BUCKET": codebuild.BuildEnvironmentVariable(
                     value=inference_results_bucket.bucket_name
-                ),
+                )
             },
+            environment=codebuild.BuildEnvironment(
+                privileged = False
+            ),
+            encryption_key=encryption_key
         )
         create_or_update_inference_lambda_project.role.attach_inline_policy(
             aws_iam.Policy(
@@ -659,11 +667,23 @@ class RetrainStack(cdk.Stack):
         inference_image_update_task.next(create_or_update_inference_lambda_task)
         retrain_definition = site_id_task.next(model_map)
 
+        # creating a log group for the step function
+        retrain_sfn_log_group = logs.CfnLogGroup(
+            self,
+            "retrain_sf_log_group",
+            retention_in_days=30
+        )
+
         retrain_sfn = sfn.StateMachine(
             self,
             "retrain_sfn",
             definition=retrain_definition,
             state_machine_name="retrain-pipeline",
+            tracing_enabled=True,
+            logs=sfn.LogOptions(
+                destination=retrain_sfn_log_group,
+                level=sfn.LogLevel.ALL
+            )
         )
 
         # Inference Pipeline
