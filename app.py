@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import aws_cdk as cdk
 
+from cdk_nag import AwsSolutionsChecks
+
 from retrain.retrain_stack import RetrainStack
 from neptune.neptune_notebook_stack import NeptuneNotebookStack
 
@@ -36,5 +38,7 @@ RetrainStack(
     # env=cdk.Environment(account='123456789012', region='us-east-1'),
     # For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html
 )
+
+cdk.Aspects.of(app).add(AwsSolutionsChecks(verbose=True))
 
 app.synth()
