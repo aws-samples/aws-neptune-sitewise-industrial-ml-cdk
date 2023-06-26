@@ -8,8 +8,11 @@ from aws_cdk import (
     aws_sagemaker as sagemaker,
     RemovalPolicy,
     CfnOutput,
-    aws_kms as kms
+    aws_kms as kms,
+    Duration
+    
 )
+#import aws_cdk.core as cdk_core
 import aws_cdk.aws_neptune_alpha as neptune
 from constructs import Construct
 
@@ -22,6 +25,7 @@ class NeptuneNotebookStack(Stack):
         neptune_vpc = ec2.Vpc(self, "Neptune-CDK-VPC",
             ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16")                      
         )
+        neptune_vpc.add_flow_log(id="neptune_flow_log1")
 
         # Cluster Parameters
         cluster_params = neptune.ClusterParameterGroup(self, "Neptune-CDK-ClusterParams",
@@ -49,7 +53,10 @@ class NeptuneNotebookStack(Stack):
             cluster_parameter_group=cluster_params,
             parameter_group=db_params,
             port=8182,
-            removal_policy=RemovalPolicy.DESTROY
+            removal_policy=RemovalPolicy.DESTROY,
+            auto_minor_version_upgrade=True,
+            backup_retention=Duration.days(10),
+            iam_authentication=True,
         )
 
         # Allow access within the security group
@@ -128,7 +135,7 @@ EOF
 
         # creating a KMS key to encrypt the notebook
         encruption_key_id = "kms-key-neptune-notebook"
-        encryption_key = kms.Key(self, encruption_key_id,
+        encryption_key = kms.Key(self, encruption_key_id, enable_key_rotation=True
         )
         
         notebook = sagemaker.CfnNotebookInstance(self, 'CDKNeptuneWorkbench',

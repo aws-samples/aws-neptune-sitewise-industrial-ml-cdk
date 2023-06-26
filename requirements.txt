@@ -2,3 +2,4 @@ aws-cdk-lib>=2.21.0
 constructs>=10.0.0,<11.0.0
 aws-cdk.aws-lambda-python-alpha==2.74.0a0
 aws-cdk.aws-neptune-alpha==2.74.0a0
+cdk-nag
