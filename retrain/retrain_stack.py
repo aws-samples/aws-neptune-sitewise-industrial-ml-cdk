@@ -117,7 +117,9 @@ class RetrainStack(cdk.Stack):
         )
 
         # defined Neptune vpc for lambda querying Neptune results
-        neptune_vpc = ec2.Vpc.from_vpc_attributes(self, "neptune_vpc",
+        neptune_vpc = ec2.Vpc.from_vpc_attributes(
+            self, 
+            "neptune_vpc",
             vpc_id=neptune_vpc_id,
             availability_zones=cdk.Fn.get_azs(),
             private_subnet_ids=[
@@ -125,6 +127,8 @@ class RetrainStack(cdk.Stack):
                 neptune_private_subnet_id_2,
             ],
         )
+        
+        neptune_vpc.add_flow_log(id="neptune_flow_log")
 
         # creating security group
         lambda_security_group = ec2.SecurityGroup(
@@ -311,6 +315,8 @@ class RetrainStack(cdk.Stack):
             nat_gateways=0,
             subnet_configuration=[retrain_subnet_configuration],
         )
+        
+        retrain_vpc.add_flow_log(id="retrain_flow_log")
 
         retrain_sg = ec2.SecurityGroup(
             self,

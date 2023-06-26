@@ -25,6 +25,7 @@ class NeptuneNotebookStack(Stack):
         neptune_vpc = ec2.Vpc(self, "Neptune-CDK-VPC",
             ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16")                      
         )
+        neptune_vpc.add_flow_log(id="neptune_flow_log1")
 
         # Cluster Parameters
         cluster_params = neptune.ClusterParameterGroup(self, "Neptune-CDK-ClusterParams",
