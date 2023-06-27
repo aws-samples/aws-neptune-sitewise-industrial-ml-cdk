@@ -513,7 +513,7 @@ class RetrainStack(cdk.Stack):
             "inference-image-build-project",
             project_name="inference-image-build-project",
             source=inference_image_codebuild_s3_source,
-            environment=codebuild.BuildEnvironment(privileged=True),
+            environment=codebuild.BuildEnvironment(privileged=False),
             environment_variables={
                 "AWS_ACCOUNT_ID": codebuild.BuildEnvironmentVariable(
                     value=cdk.Aws.ACCOUNT_ID
@@ -525,6 +525,7 @@ class RetrainStack(cdk.Stack):
                     value=model_artifact_bucket.bucket_name
                 ),
             },
+            encryption_key=kms.Key(self, "Codebuild_key", enable_key_rotation=True),
         )
 
         model_artifact_bucket.grant_read(inference_image_build_project.role)
@@ -726,12 +727,23 @@ class RetrainStack(cdk.Stack):
 
         infer_definition = site_id_job.next(rtu_map)
 
+        # creating a log group for the infer step function
+        infer_sfn_log_group = logs.CfnLogGroup(
+            self,
+            "infer_sf_log_group",
+            retention_in_days=30
+        )
+        
         infer_sfn = sfn.StateMachine(
             self,
             "infer_sfn",
             definition=infer_definition,
             state_machine_name="inference-pipeline",
-            tracing_enabled=True
+            tracing_enabled=True,
+            logs=sfn.LogOptions(
+                destination=infer_sfn_log_group,
+                level=sfn.LogLevel.ALL
+            )
         )
 
         init_value_error_metric_filter = logs.CfnMetricFilter(
