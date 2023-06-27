@@ -9,7 +9,6 @@ from aws_cdk import (
     aws_ecr_assets,
     aws_ssm as ssm,
     aws_lambda,
-    aws_events,
     aws_events_targets as targets,
     aws_logs as logs,
     aws_cloudwatch as cloudwatch,
@@ -211,6 +210,7 @@ class RetrainStack(cdk.Stack):
                 "data_bucket": data_bucket.bucket_name,
             },
             reserved_concurrent_executions=30,
+            tracing=aws_lambda.Tracing.ACTIVE,
         )
 
         codebuild_lambda = aws_alambda.PythonFunction(
@@ -223,6 +223,7 @@ class RetrainStack(cdk.Stack):
             handler="handler",
             timeout=cdk.Duration.minutes(15),
             reserved_concurrent_executions=30,
+            tracing=aws_lambda.Tracing.ACTIVE,
         )
 
         # helper lambda to get site ids and rtus
@@ -244,6 +245,7 @@ class RetrainStack(cdk.Stack):
             },
             memory_size=1024,
             reserved_concurrent_executions=30,
+            tracing=aws_lambda.Tracing.ACTIVE,
         )
 
         # orchestrating lambda to return site ids and start site_id_and_rtu_lambda
@@ -264,6 +266,7 @@ class RetrainStack(cdk.Stack):
                 "site_id_and_rtu_lambda": site_id_and_rtu_lambda.function_arn,
             },
             reserved_concurrent_executions=30,
+            tracing=aws_lambda.Tracing.ACTIVE,
         )
         site_id_lambda.node.add_dependency(site_id_and_rtu_lambda)
 
@@ -728,6 +731,7 @@ class RetrainStack(cdk.Stack):
             "infer_sfn",
             definition=infer_definition,
             state_machine_name="inference-pipeline",
+            tracing_enabled=True
         )
 
         init_value_error_metric_filter = logs.CfnMetricFilter(
