@@ -22,4 +22,6 @@ RUN pip3 --no-cache-dir install --upgrade awscli
 COPY infer_lambda.py ${LAMBDA_TASK_ROOT}
 COPY model.csv ${LAMBDA_TASK_ROOT}
 
+HEALTHCHECK NONE
+
 CMD ["infer_lambda.handler"]
