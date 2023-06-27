@@ -14,4 +14,6 @@ RUN pip3 install pandas==1.5.2 \
 COPY training.py .
 RUN mkdir refdata
 
+HEALTHCHECK NONE
+
 CMD ["python3", "-u", "training.py"]
