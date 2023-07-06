@@ -23,6 +23,7 @@ from aws_cdk import (
     Fn,
     aws_kms as kms
 )
+from cdk_nag import NagSuppressions, NagPackSuppression
 
 # WHEN RUNNING THIS STACK FOR THE FIRST TIME - MUST RUN NEPTUNE STACK FIRST AS THE BELOW ARE DEPENDENT ON NEPTUNE STACK
 # import neptune security group ID from the Neptune stack output 'neptune_security_group'
@@ -159,7 +160,7 @@ class RetrainStack(cdk.Stack):
         # IAM policies so multiple lambdas and batch role can access prod data processed bucket and Athena
         # bucket is encrypted in another account so need kms access
         kms_statement = aws_iam.PolicyStatement(actions=["kms:decrypt"], resources=["*"])
-
+        
         # add permissions for IotSitewise
         sitewise_statement = aws_iam.PolicyStatement(
             actions=["iotsitewise:BatchGetAssetPropertyValueHistory"], resources=["*"]
@@ -212,7 +213,31 @@ class RetrainStack(cdk.Stack):
             reserved_concurrent_executions=30,
             tracing=aws_lambda.Tracing.ACTIVE,
         )
-
+        init_lambda.role.add_to_policy(kms_statement)
+        init_lambda.role.add_to_policy(invoke_inference_lambda_statement)
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=init_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4", 
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=init_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
+        
         codebuild_lambda = aws_alambda.PythonFunction(
             self,
             "codebuild-function",
@@ -247,6 +272,32 @@ class RetrainStack(cdk.Stack):
             reserved_concurrent_executions=30,
             tracing=aws_lambda.Tracing.ACTIVE,
         )
+        site_id_and_rtu_lambda.role.add_to_policy(sitewise_statement)
+        site_id_and_rtu_lambda.role.add_to_policy(kms_statement)
+        site_id_and_rtu_lambda.role.add_managed_policy(vpc_statement)
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=site_id_and_rtu_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4", 
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=site_id_and_rtu_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
+        
 
         # orchestrating lambda to return site ids and start site_id_and_rtu_lambda
         site_id_lambda = aws_alambda.PythonFunction(
@@ -269,6 +320,29 @@ class RetrainStack(cdk.Stack):
             tracing=aws_lambda.Tracing.ACTIVE,
         )
         site_id_lambda.node.add_dependency(site_id_and_rtu_lambda)
+        site_id_lambda.role.add_managed_policy(vpc_statement)
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=site_id_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4", 
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=site_id_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
 
         # lookup neptune security group by the security group id
         neptune_security_group = ec2.SecurityGroup.from_security_group_id(
@@ -290,18 +364,6 @@ class RetrainStack(cdk.Stack):
         data_bucket.grant_read_write(site_id_lambda)
         data_bucket.grant_read_write(site_id_and_rtu_lambda)
         data_bucket.grant_read_write(init_lambda)
-
-        site_id_and_rtu_lambda.role.add_to_policy(sitewise_statement)
-
-        site_id_lambda.role.add_to_policy(kms_statement)
-        site_id_and_rtu_lambda.role.add_to_policy(kms_statement)
-        init_lambda.role.add_to_policy(kms_statement)
-
-        # init_lambda.role.add_managed_policy(vpc_statement)
-        site_id_lambda.role.add_managed_policy(vpc_statement)
-        site_id_and_rtu_lambda.role.add_managed_policy(vpc_statement)
-
-        init_lambda.role.add_to_policy(invoke_inference_lambda_statement)
 
         codebuild_lambda.role.add_to_policy(codebuild_statement)
 
@@ -460,6 +522,28 @@ class RetrainStack(cdk.Stack):
                 ),
             ],
         )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=inference_lambda_execution_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=inference_lambda_execution_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
 
         inference_results_bucket.grant_read_write(inference_lambda_execution_role)
 
@@ -526,6 +610,16 @@ class RetrainStack(cdk.Stack):
                 ),
             },
             encryption_key=kms.Key(self, "Codebuild_key", enable_key_rotation=True),
+        )
+        NagSuppressions.add_resource_suppressions(
+            construct=inference_image_build_project,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children=True,
         )
 
         model_artifact_bucket.grant_read(inference_image_build_project.role)
@@ -602,6 +696,18 @@ class RetrainStack(cdk.Stack):
                 ],
             )
         )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=create_or_update_inference_lambda_project,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
+               
         # allowing the create or update inference lambda project to read the codebuild artifacts bucket
         codebuild_artifacts_bucket.grant_read(
             create_or_update_inference_lambda_project.role
@@ -641,6 +747,28 @@ class RetrainStack(cdk.Stack):
                 }
             ),
             result_path=sfn.JsonPath.string_at("$.result"),
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=batch_instance_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+       
+        NagSuppressions.add_resource_suppressions(
+            construct=[batch_instance_role],
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
         )
 
         model_map.iterator(site_id_and_rtu_task)
@@ -695,9 +823,19 @@ class RetrainStack(cdk.Stack):
                 level=sfn.LogLevel.ALL
             )
         )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=retrain_sfn,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )
 
         # Inference Pipeline
-
         site_id_job = tasks.LambdaInvoke(
             self, "Site ID", lambda_function=site_id_lambda
         )
@@ -745,6 +883,18 @@ class RetrainStack(cdk.Stack):
                 level=sfn.LogLevel.ALL
             )
         )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=infer_sfn,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5", 
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )        
+        
 
         init_value_error_metric_filter = logs.CfnMetricFilter(
             self,
@@ -795,3 +945,6 @@ class RetrainStack(cdk.Stack):
             schedule=events.Schedule.rate(Duration.hours(1)),
             targets=[targets.SfnStateMachine(infer_sfn)],
         )
+
+
+    
