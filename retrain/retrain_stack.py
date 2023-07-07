@@ -100,6 +100,17 @@ class RetrainStack(cdk.Stack):
             role_name=f"sitewise-s3-role-{cdk.Aws.ACCOUNT_ID}",
         )
         sitewise_s3_role.add_to_policy(sitewise_data_bucket_policy)
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=sitewise_s3_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )        
 
         # role to allow
         aws_iam.Role(
@@ -249,6 +260,28 @@ class RetrainStack(cdk.Stack):
             timeout=cdk.Duration.minutes(15),
             reserved_concurrent_executions=30,
             tracing=aws_lambda.Tracing.ACTIVE,
+        )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=codebuild_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=codebuild_lambda,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
         )
 
         # helper lambda to get site ids and rtus
@@ -522,28 +555,6 @@ class RetrainStack(cdk.Stack):
                 ),
             ],
         )
-        
-        NagSuppressions.add_resource_suppressions(
-            construct=inference_lambda_execution_role,
-            suppressions=[
-                NagPackSuppression(
-                    id="AwsSolutions-IAM4",
-                    reason="This error is for policies that are CDK generated and is acceptable for use",
-                    )
-            ],
-            apply_to_children=True,
-        )
-
-        NagSuppressions.add_resource_suppressions(
-            construct=inference_lambda_execution_role,
-            suppressions=[
-                NagPackSuppression(
-                    id="AwsSolutions-IAM5",
-                    reason="Suppression errors for policies with '*' in resource",
-                    )
-            ],
-            apply_to_children = True,
-        )
 
         inference_results_bucket.grant_read_write(inference_lambda_execution_role)
 
@@ -579,6 +590,28 @@ class RetrainStack(cdk.Stack):
             destination_bucket=codebuild_artifacts_bucket,
             destination_key_prefix="source-inference-lambda-update",
         )
+        
+        NagSuppressions.add_resource_suppressions(
+            construct=[inference_image_codebuild_bucket_deployment, inference_lambda_update_codebuild_bucket_deployment],
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=[inference_image_codebuild_bucket_deployment, inference_lambda_update_codebuild_bucket_deployment],
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )       
 
         inference_image_codebuild_s3_source = codebuild.Source.s3(
             bucket=codebuild_artifacts_bucket, path="source-inference-image-build/"
@@ -698,7 +731,22 @@ class RetrainStack(cdk.Stack):
         )
         
         NagSuppressions.add_resource_suppressions(
-            construct=create_or_update_inference_lambda_project,
+            construct=inference_lambda_execution_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=[
+                inference_lambda_execution_role, 
+                create_or_update_inference_lambda_project, 
+                create_or_update_inference_lambda_project.role,
+                ],
             suppressions=[
                 NagPackSuppression(
                     id="AwsSolutions-IAM5",
@@ -945,6 +993,3 @@ class RetrainStack(cdk.Stack):
             schedule=events.Schedule.rate(Duration.hours(1)),
             targets=[targets.SfnStateMachine(infer_sfn)],
         )
-
-
-    
