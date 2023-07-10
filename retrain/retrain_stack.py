@@ -409,7 +409,8 @@ class RetrainStack(cdk.Stack):
             self,
             "retrain-batch-job-vpc",
             vpc_name="retrain-batch-job-vpc",
-            cidr="10.0.0.0/25",
+            #cidr="10.0.0.0/25",
+            ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/25"),
             nat_gateways=0,
             subnet_configuration=[retrain_subnet_configuration],
         )
@@ -591,28 +592,6 @@ class RetrainStack(cdk.Stack):
             destination_key_prefix="source-inference-lambda-update",
         )
         
-        NagSuppressions.add_resource_suppressions(
-            construct=[inference_image_codebuild_bucket_deployment, inference_lambda_update_codebuild_bucket_deployment],
-            suppressions=[
-                NagPackSuppression(
-                    id="AwsSolutions-IAM4",
-                    reason="This error is for policies that are CDK generated and is acceptable for use",
-                    )
-            ],
-            apply_to_children=True,
-        )
-
-        NagSuppressions.add_resource_suppressions(
-            construct=[inference_image_codebuild_bucket_deployment, inference_lambda_update_codebuild_bucket_deployment],
-            suppressions=[
-                NagPackSuppression(
-                    id="AwsSolutions-IAM5",
-                    reason="Suppression errors for policies with '*' in resource",
-                    )
-            ],
-            apply_to_children = True,
-        )       
-
         inference_image_codebuild_s3_source = codebuild.Source.s3(
             bucket=codebuild_artifacts_bucket, path="source-inference-image-build/"
         )
@@ -992,4 +971,28 @@ class RetrainStack(cdk.Stack):
             "infer-rule",
             schedule=events.Schedule.rate(Duration.hours(1)),
             targets=[targets.SfnStateMachine(infer_sfn)],
+        )
+
+        # adding cdk nag suupressions by path
+        NagSuppressions.add_resource_suppressions_by_path(
+            self,
+            [
+                "RetrainStack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/DefaultPolicy/Resource",
+                "RetrainStack/Custom::CDKBucketDeployment8693BB64968944B69AAFB0CC9EB8756C/ServiceRole/Resource",
+                "RetrainStack/neptune-read-from-s3/Resource",
+                "RetrainStack/inference-lambda-update-policy/Resource",
+                "RetrainStack/inference-lambda-update-ecr-access-policy/Resource",
+                "RetrainStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource",
+                "RetrainStack/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource",
+            ],
+            [
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    ),
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ]
         )
