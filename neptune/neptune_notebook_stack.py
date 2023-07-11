@@ -15,6 +15,7 @@ from aws_cdk import (
 #import aws_cdk.core as cdk_core
 import aws_cdk.aws_neptune_alpha as neptune
 from constructs import Construct
+from cdk_nag import NagSuppressions, NagPackSuppression
 
 class NeptuneNotebookStack(Stack):
 
@@ -100,6 +101,29 @@ class NeptuneNotebookStack(Stack):
                 'AWSNeptuneNotebook-CDK': notebook_role_policy_doc
             }
         )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=notebook_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM4",
+                    reason="This error is for policies that are CDK generated and is acceptable for use",
+                    )
+            ],
+            apply_to_children=True,
+        )
+
+        NagSuppressions.add_resource_suppressions(
+            construct=notebook_role,
+            suppressions=[
+                NagPackSuppression(
+                    id="AwsSolutions-IAM5",
+                    reason="Suppression errors for policies with '*' in resource",
+                    )
+            ],
+            apply_to_children = True,
+        )        
+        
 
         notebook_lifecycle_script = f'''#!/bin/bash
 sudo -u ec2-user -i <<'EOF'
