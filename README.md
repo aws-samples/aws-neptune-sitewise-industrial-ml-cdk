@@ -1,3 +1,15 @@
+# Authors
+* [Jake Chen](https://github.com/jakechen): Lead AI/ML Architect
+* [Ivan Cui](https://github.com/whosivan): AI/ML Architect
+* [Jack Tanny](https://github.com/tannyj17): ML/Data Engineer
+* [Gauhar Bains](https://github.com/gauharbains): ML Engineer
+* [Chen Yang](https://github.com/yangc5): ML Engineer
+* [Andrew Preston](https://github.com/kesar-pista): Lead Data Architect
+* [Isaac Owusu](https://github.com/iowusu): Lead Data Architect
+* [Shrimanth Ajjamane Manohar](https://github.com/ShrimanthAM): Data Engineer
+* [Ananya Koduri](https://github.com/lananya): Data Enginee
+* [Josh Bonello](https://github.com/Josh-Bonello): Lead DevOps Architect
+
 # About this respository
 This repository provides a sample Amazon Cloud Development Kit (CDK) application that trains and deploys a basic Machine Learning model for industrial assets. The solution is targeted at HVAC (Heating, Ventilation, and Air Conditioning) and manufacturing usecases, where pieces of equipment (assets) can be represented in a graph. Amazon Neptune is the graph database used to store the asset's metadata. AWS IoT SiteWise stores the asset's telemetry data. We will use a simple statistical anomaly detection method to detect analogous temperature values on the provided synthetic data. However, this repository could be repurposed to include your own custom ML model, taking advantage of the graph relationships within Neptune.
 
