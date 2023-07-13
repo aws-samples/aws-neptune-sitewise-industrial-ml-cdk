@@ -1,5 +1,15 @@
+# Authors
+* [Jake Chen](https://github.com/jakechen): Lead AI/ML Architect
+* [Ivan Cui](https://github.com/whosivan): AI/ML Architect
+* [Jack Tanny](https://github.com/tannyj17): ML/Data Engineer
+* [Gauhar Bains](https://github.com/gauharbains): ML Engineer
+* [Chen Yang](https://github.com/yangc5): ML Engineer
+
 # About this respository
 This repository provides a sample Amazon Cloud Development Kit (CDK) application that trains and deploys a basic Machine Learning model for industrial assets. The solution is targeted at HVAC (Heating, Ventilation, and Air Conditioning) and manufacturing usecases, where pieces of equipment (assets) can be represented in a graph. Amazon Neptune is the graph database used to store the asset's metadata. AWS IoT SiteWise stores the asset's telemetry data. We will use a simple statistical anomaly detection method to detect analogous temperature values on the provided synthetic data. However, this repository could be repurposed to include your own custom ML model, taking advantage of the graph relationships within Neptune.
+
+# Motivations
+The current state of building data is often disorganized, with inconsistent naming conventions for sites, assets, and sensors due to various factors such as different teams, vendors, or engineers involved during setup. Consequently, deploying downstream analytics, including machine learning, becomes a time-consuming process that requires customizations per each model and/or site and thus limiting scalability. To address this issue, our approach leverages standardized ontology and metadata loaded into Amazon Neptune the linking to telemetry in AWS IoT SiteWise. This enables analytics and machine learning to scale quickly and efficiently using an embarrassingly parallel approach, as a single query can be applied to all sites, assets, and sensors. By parameterizing the query with the outputs from Neptune, we have successfully demonstrated scalability to at least 45,000 unique sensors, with the potential to increase exponentially.
 
 # How does it work?
 The application is broken up into two parts - a training pipeline and an inference pipeline. The training pipeline collects data from Amazon Neptune and AWS IoT SiteWise, starts an AWS Batch job to train the model, and deploys the model as an AWS Lambda function. The inference pipeline collects inference data from Amazon Neptune and AWS IoT SiteWise and invokes the inference AWS Lambda function. 
@@ -267,38 +277,9 @@ The Name of the execution and "id" should be the same. We recommend using the au
 Once completed successfully, you can view the outputs of the model at the following S3 location:
 model-data-bucket-<accountid>/inference/<inference-pipeline-event-id>/site_01.csv
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Special Thanks
+* [Andrew Preston](https://github.com/kesar-pista): Lead Data Architect
+* [Isaac Owusu](https://github.com/iowusu): Lead Data Architect
+* [Shrimanth Ajjamane Manohar](https://github.com/ShrimanthAM): Data Engineer
+* [Ananya Koduri](https://github.com/lananya): Data Engineer
+* [Josh Bonello](https://github.com/Josh-Bonello): Lead DevOps Architect
