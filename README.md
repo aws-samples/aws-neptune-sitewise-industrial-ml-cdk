@@ -281,5 +281,5 @@ model-data-bucket-<accountid>/inference/<inference-pipeline-event-id>/site_01.cs
 * [Andrew Preston](https://github.com/kesar-pista): Lead Data Architect
 * [Isaac Owusu](https://github.com/iowusu): Lead Data Architect
 * [Shrimanth Ajjamane Manohar](https://github.com/ShrimanthAM): Data Engineer
-* [Ananya Koduri](https://github.com/lananya): Data Enginee
+* [Ananya Koduri](https://github.com/lananya): Data Engineer
 * [Josh Bonello](https://github.com/Josh-Bonello): Lead DevOps Architect
