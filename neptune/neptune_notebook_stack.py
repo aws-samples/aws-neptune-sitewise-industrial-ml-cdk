@@ -48,6 +48,7 @@ class NeptuneNotebookStack(Stack):
         )
 
         # Create a Neptune Cluster
+        # TO DO: Investigate iam_authentication
         neptune_cluster = neptune.DatabaseCluster(self, "Neptune-CDK-Cluster",
             vpc=neptune_vpc,
             instance_type=neptune.InstanceType.T3_MEDIUM,
@@ -158,8 +159,7 @@ EOF
         #CfnOutput(self, "neptune_vpc_private_subnet_3_id", value=neptune_vpc.private_subnets[2].subnet_id)
 
         # creating a KMS key to encrypt the notebook
-        encruption_key_id = "kms-key-neptune-notebook"
-        encryption_key = kms.Key(self, encruption_key_id, enable_key_rotation=True
+        encryption_key = kms.Key(self, "kms-key-neptune-notebook", enable_key_rotation=True
         )
         
         notebook = sagemaker.CfnNotebookInstance(self, 'CDKNeptuneWorkbench',
@@ -170,9 +170,10 @@ EOF
             root_access='Disabled',
             security_group_ids=[neptune_security_group_id],
             subnet_id=neptune_subnet_id,
-            kms_key_id= encruption_key_id,
+            kms_key_id= encryption_key.key_id,
             direct_internet_access='Disabled',
         )
+        notebook.node.add_dependency(encryption_key)
         Tags.of(notebook).add('aws-neptune-cluster-id', neptune_cluster.cluster_identifier)
         Tags.of(notebook).add('aws-neptune-resource-id', neptune_cluster.cluster_resource_identifier)
 

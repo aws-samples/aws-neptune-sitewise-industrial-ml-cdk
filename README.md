@@ -166,7 +166,7 @@ Amazon Neptune offers Jupyter Notebooks - a fully managed interactive developmen
 
 ![image-9.png](./Images/image-9.png)
 
-2. Attach the following policy to the IAM role created when the Neptune Notebook was developed.
+2. Attach the following policy to the IAM role created when the Neptune Notebook was developed. Be sure to replace {ACCOUNT_ID} with the AWS Account ID you are using. 
 
 ```
 {
@@ -180,8 +180,8 @@ Amazon Neptune offers Jupyter Notebooks - a fully managed interactive developmen
                 "s3:ListBucket"
             ],
             "Resource": [
-                "arn:aws:s3:::model-data-bucket-199131085527",
-                "arn:aws:s3:::model-data-bucket-199131085527/*"
+                "arn:aws:s3:::model-data-bucket-{ACCOUNT_ID}}",
+                "arn:aws:s3:::model-data-bucket-{ACCOUNT_ID}/*"
             ],
             "Effect": "Allow"
         }
@@ -199,7 +199,7 @@ Add the role to the cluster, and wait until it is finished.
 
 4. Create an S3 Endpoint:
 
-Follow the instructions for Creating the [Amazon S3 VPC Endpoint](https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-IAM.html) in the Neptune documentation. 
+Follow the instructions for Creating the [Amazon S3 VPC Endpoint](https://docs.aws.amazon.com/neptune/latest/userguide/bulk-load-tutorial-vpc.html) in the Neptune documentation. 
 
 5. Edit the site_data.csv file included in this repo. You'll need to add the SiteWise Asset IDs and SiteWise Point Property IDs for each RTU. 
 

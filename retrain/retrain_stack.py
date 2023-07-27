@@ -48,6 +48,7 @@ class RetrainStack(cdk.Stack):
             block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
             encryption=aws_s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
+            object_ownership=aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED
         )
         # bucket to hold inference artifacts during inferencing process
         inference_results_bucket = aws_s3.Bucket(
@@ -59,6 +60,7 @@ class RetrainStack(cdk.Stack):
             block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
             encryption=aws_s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
+            object_ownership=aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED
         )
         # bucket to hold inference/retrain data for inference/retraining process
         data_bucket = aws_s3.Bucket(
@@ -70,6 +72,7 @@ class RetrainStack(cdk.Stack):
             block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
             encryption=aws_s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
+            object_ownership=aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED
         )
 
         # upload sample sitewise data to s3
@@ -494,12 +497,12 @@ class RetrainStack(cdk.Stack):
                     subnet_type=ec2.SubnetType.PUBLIC
                 ).subnet_ids,
                 minv_cpus=0,
-                desiredv_cpus=16,
-                maxv_cpus=64,
+                desiredv_cpus=4,
+                maxv_cpus=16,
                 instance_role=batch_instance_profile.attr_arn,
                 security_group_ids=[retrain_sg.security_group_id],
                 type="EC2",
-                instance_types=["p3", "g3", "g4dn"],
+                instance_types=["c3"],
                 image_id=ecs_optimized_gpu_amznlx2_image_id,
                 launch_template=batch.CfnComputeEnvironment.LaunchTemplateSpecificationProperty(
                     launch_template_id=lt.ref
@@ -528,9 +531,6 @@ class RetrainStack(cdk.Stack):
             container_properties=batch.CfnJobDefinition.ContainerPropertiesProperty(
                 image=retrain_image_asset.image_uri,
                 resource_requirements=[
-                    batch.CfnJobDefinition.ResourceRequirementProperty(
-                        type="GPU", value="1"
-                    ),
                     batch.CfnJobDefinition.ResourceRequirementProperty(
                         type="VCPU", value="4"
                     ),
@@ -569,6 +569,7 @@ class RetrainStack(cdk.Stack):
             block_public_access=aws_s3.BlockPublicAccess.BLOCK_ALL,
             encryption=aws_s3.BucketEncryption.S3_MANAGED,
             enforce_ssl=True,
+            object_ownership=aws_s3.ObjectOwnership.BUCKET_OWNER_PREFERRED
         )
 
         inference_image_codebuild_bucket_deployment = s3deploy.BucketDeployment(
@@ -833,10 +834,10 @@ class RetrainStack(cdk.Stack):
         retrain_definition = site_id_task.next(model_map)
 
         # creating a log group for the step function
-        retrain_sfn_log_group = logs.CfnLogGroup(
+        retrain_sfn_log_group = logs.LogGroup(
             self,
             "retrain_sf_log_group",
-            retention_in_days=30
+            retention=logs.RetentionDays.ONE_MONTH
         )
 
         retrain_sfn = sfn.StateMachine(
@@ -850,6 +851,7 @@ class RetrainStack(cdk.Stack):
                 level=sfn.LogLevel.ALL
             )
         )
+        retrain_sfn.node.add_dependency(retrain_sfn_log_group)
         
         NagSuppressions.add_resource_suppressions(
             construct=retrain_sfn,
@@ -893,10 +895,10 @@ class RetrainStack(cdk.Stack):
         infer_definition = site_id_job.next(rtu_map)
 
         # creating a log group for the infer step function
-        infer_sfn_log_group = logs.CfnLogGroup(
+        infer_sfn_log_group = logs.LogGroup(
             self,
             "infer_sf_log_group",
-            retention_in_days=30
+            retention=logs.RetentionDays.ONE_MONTH
         )
         
         infer_sfn = sfn.StateMachine(
@@ -910,6 +912,7 @@ class RetrainStack(cdk.Stack):
                 level=sfn.LogLevel.ALL
             )
         )
+        infer_sfn.node.add_dependency(infer_sfn_log_group)
         
         NagSuppressions.add_resource_suppressions(
             construct=infer_sfn,

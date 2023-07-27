@@ -71,12 +71,12 @@ def getRTUsandPointForAs(site_id):
 
 
 def getTimeInterval(pipeline_type):
-    # REMOVE THIS FUNCTION AND UNCOMMENT OUT THE VERSION ABOVE ONCE WE MOVE TO CONDUIT
+    # Adjust timeframe as needed
     end_time = datetime.datetime.fromtimestamp(1652732267)
     if pipeline_type == "inference":
         start_time = int((end_time + datetime.timedelta(hours=-1)).timestamp())
     if pipeline_type == "retrain":
-        start_time = int((end_time + datetime.timedelta(days=-1)).timestamp())
+        start_time = int((end_time + datetime.timedelta(days=-90)).timestamp())
     return end_time, start_time
 
 

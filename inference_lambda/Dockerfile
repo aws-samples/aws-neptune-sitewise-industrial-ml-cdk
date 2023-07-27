@@ -1,5 +1,4 @@
 FROM public.ecr.aws/lambda/python:3.9
-USER me
 
 # You can specify custom Dockerfile commands to run at build time e.g:
 #
