@@ -501,7 +501,7 @@ class RetrainStack(cdk.Stack):
                 instance_role=batch_instance_profile.attr_arn,
                 security_group_ids=[retrain_sg.security_group_id],
                 type="EC2",
-                instance_types=["p3", "g3", "g4dn", "g5"],
+                instance_types=["p3", "g3", "g4dn"],
                 image_id=ecs_optimized_gpu_amznlx2_image_id,
                 launch_template=batch.CfnComputeEnvironment.LaunchTemplateSpecificationProperty(
                     launch_template_id=lt.ref
