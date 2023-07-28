@@ -113,7 +113,7 @@ class RetrainStack(cdk.Stack):
                     )
             ],
             apply_to_children = True,
-        )        
+        )
 
         # role to allow
         aws_iam.Role(
@@ -405,14 +405,13 @@ class RetrainStack(cdk.Stack):
 
         # deploy retrain EC2 in public subnet so it has internet access and to save cost on NAT Gateway. The subnet sg allows no inbound traffic for security.
         retrain_subnet_configuration = ec2.SubnetConfiguration(
-            name="retrain_subnet", subnet_type=ec2.SubnetType.PUBLIC, cidr_mask=26, map_public_ip_on_launch=False,
+            name="retrain_subnet", subnet_type=ec2.SubnetType.PUBLIC, cidr_mask=26,
         )
 
         retrain_vpc = ec2.Vpc(
             self,
             "retrain-batch-job-vpc",
             vpc_name="retrain-batch-job-vpc",
-            #cidr="10.0.0.0/25",
             ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/25"),
             nat_gateways=0,
             subnet_configuration=[retrain_subnet_configuration],
@@ -497,12 +496,12 @@ class RetrainStack(cdk.Stack):
                     subnet_type=ec2.SubnetType.PUBLIC
                 ).subnet_ids,
                 minv_cpus=0,
-                desiredv_cpus=4,
-                maxv_cpus=16,
+                desiredv_cpus=16,
+                maxv_cpus=64,
                 instance_role=batch_instance_profile.attr_arn,
                 security_group_ids=[retrain_sg.security_group_id],
                 type="EC2",
-                instance_types=["c3"],
+                instance_types=["p3", "g3", "g4dn", "g5"],
                 image_id=ecs_optimized_gpu_amznlx2_image_id,
                 launch_template=batch.CfnComputeEnvironment.LaunchTemplateSpecificationProperty(
                     launch_template_id=lt.ref
@@ -531,6 +530,9 @@ class RetrainStack(cdk.Stack):
             container_properties=batch.CfnJobDefinition.ContainerPropertiesProperty(
                 image=retrain_image_asset.image_uri,
                 resource_requirements=[
+                    batch.CfnJobDefinition.ResourceRequirementProperty(
+                        type="GPU", value="1"
+                    ),
                     batch.CfnJobDefinition.ResourceRequirementProperty(
                         type="VCPU", value="4"
                     ),
