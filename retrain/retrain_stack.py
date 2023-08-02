@@ -115,7 +115,7 @@ class RetrainStack(cdk.Stack):
             apply_to_children = True,
         )
 
-        # role to allow
+        # role to allow us to perform a bulk upload to Neptune
         aws_iam.Role(
             self,
             "neptune-read-from-s3",
@@ -607,12 +607,15 @@ class RetrainStack(cdk.Stack):
             self, "retrained-inference-ecr", repository_name="retrained-inference-ecr"
         )
 
+        codebuild_encryption_key = kms.Key(self, "codebuild-encryption", enable_key_rotation=True
+        )
+
         inference_image_build_project = codebuild.Project(
             self,
             "inference-image-build-project",
             project_name="inference-image-build-project",
             source=inference_image_codebuild_s3_source,
-            environment=codebuild.BuildEnvironment(privileged=False),
+            environment=codebuild.BuildEnvironment(privileged=True), #must run as true to connect to docker daemon
             environment_variables={
                 "AWS_ACCOUNT_ID": codebuild.BuildEnvironmentVariable(
                     value=cdk.Aws.ACCOUNT_ID
@@ -624,7 +627,7 @@ class RetrainStack(cdk.Stack):
                     value=model_artifact_bucket.bucket_name
                 ),
             },
-            encryption_key=kms.Key(self, "Codebuild_key", enable_key_rotation=True),
+            encryption_key=codebuild_encryption_key
         )
         NagSuppressions.add_resource_suppressions(
             construct=inference_image_build_project,
@@ -640,9 +643,6 @@ class RetrainStack(cdk.Stack):
         model_artifact_bucket.grant_read(inference_image_build_project.role)
         codebuild_artifacts_bucket.grant_read(inference_image_build_project.role)
         retrained_inference_ecr.grant_pull_push(inference_image_build_project.role)
-
-        encryption_key = kms.Key(self, "codebuild-encryption", enable_key_rotation=True
-        )
 
         # codebuild step to create/update inference lambda using ECR image
         create_or_update_inference_lambda_project = codebuild.Project(
@@ -674,7 +674,7 @@ class RetrainStack(cdk.Stack):
             environment=codebuild.BuildEnvironment(
                 privileged = False
             ),
-            encryption_key=encryption_key
+            encryption_key=codebuild_encryption_key
         )
         create_or_update_inference_lambda_project.role.attach_inline_policy(
             aws_iam.Policy(
@@ -693,6 +693,10 @@ class RetrainStack(cdk.Stack):
                         actions=["iam:GetRole", "iam:PassRole"],
                         resources=[inference_lambda_execution_role.role_arn],
                     ),
+                    aws_iam.PolicyStatement(
+                        actions=["kms:*"],
+                        resources=[codebuild_encryption_key.key_arn],
+                    ),
                 ],
             )
         )
@@ -707,6 +711,10 @@ class RetrainStack(cdk.Stack):
                     ),
                     aws_iam.PolicyStatement(
                         actions=["ecr:GetAuthorizationToken"], resources=["*"]
+                    ),
+                    aws_iam.PolicyStatement(
+                        actions=["kms:*"],
+                        resources=[codebuild_encryption_key.key_arn],
                     ),
                 ],
             )
