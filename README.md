@@ -6,7 +6,9 @@
 * [Chen Yang](https://github.com/yangc5): ML Engineer
 
 # About this respository
-This repository provides a sample Amazon Cloud Development Kit (CDK) application that trains and deploys a basic Machine Learning model for industrial assets. The solution is targeted at HVAC (Heating, Ventilation, and Air Conditioning) and manufacturing usecases, where pieces of equipment (assets) can be represented in a graph. Amazon Neptune is the graph database used to store the asset's metadata. AWS IoT SiteWise stores the asset's telemetry data. We will use a simple statistical anomaly detection method to detect analogous temperature values on the provided synthetic data. However, this repository could be repurposed to include your own custom ML model, taking advantage of the graph relationships within Neptune.
+This repository provides a sample Amazon Cloud Development Kit (CDK) application that trains and deploys a basic Machine Learning model for industrial assets. The solution is targeted at HVAC (Heating, Ventilation, and Air Conditioning) and manufacturing usecases, where pieces of equipment (assets) can be represented in a knowledge graph. Amazon Neptune is the graph database used to store the asset's metadata. AWS IoT SiteWise stores the asset's telemetry data. We will use a simple statistical anomaly detection method to detect analogous temperature values on the provided synthetic data. However, this repository could be repurposed to include your own custom ML model, taking advantage of the graph relationships within Neptune. 
+
+One popular usecase is optimizing energy usage of HVAC equipment. The follow [aws-samples repository](https://github.com/aws-solutions-library-samples/guidance-for-monitoring-and-optimizing-energy-usage-on-aws) provides an example for creating your own Reinforecement Learning optimization model for HVAC equipment. You may choose to use this sample to develop your own model, by which you could deploy using this sample CDK application.
 
 # Motivations
 The current state of building data is often disorganized, with inconsistent naming conventions for sites, assets, and sensors due to various factors such as different teams, vendors, or engineers involved during setup. Consequently, deploying downstream analytics, including machine learning, becomes a time-consuming process that requires customizations per each model and/or site and thus limiting scalability. To address this issue, our approach leverages standardized ontology and metadata loaded into Amazon Neptune the linking to telemetry in AWS IoT SiteWise. This enables analytics and machine learning to scale quickly and efficiently using an embarrassingly parallel approach, as a single query can be applied to all sites, assets, and sensors. By parameterizing the query with the outputs from Neptune, we have successfully demonstrated scalability to at least 45,000 unique sensors, with the potential to increase exponentially.
@@ -233,6 +235,12 @@ Once all cells are run in the Notebook, you are ready to test the application!
 ### Train the Model
 
 To train the model, you'll want to trigger the AWS Step Functions retrain-pipeline. 
+
+***The Batch job is configured to use an EC2 Instance with a GPU from the p3, g3, or g4dn. Ensure your account is able to access an EC2 instance of these types. You can check the following quotas and ensure their applied value is >1.***
+```
+L-417A185B
+L-DB2E81BA
+```
 
 1. In the AWS Management Console, find the retrain-pipeline State machine.
 ![image-16.png](./Images/image-16.png)
